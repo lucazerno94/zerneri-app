@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zerneri App</title>
+<link rel="apple-touch-icon" sizes="180x180" href="zerneri-icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="zerneri-icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="zerneri-icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-title" content="Zerneri App">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#17202a">
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;margin:0;background:#f4f6f8;color:#17202a}
+.container{max-width:900px;margin:auto;padding:24px}
+h1{margin-bottom:6px}.sub{color:#5f6b76}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.card{background:white;border-radius:16px;padding:18px;box-shadow:0 4px 16px #00000012}
+h2{margin-top:0}label{display:block;font-weight:600;margin:12px 0 5px}
+input{width:100%;box-sizing:border-box;padding:11px;border:1px solid #ccd3da;border-radius:9px;font-size:16px}
+button{margin:18px 0;padding:13px 20px;border:0;border-radius:10px;background:#17202a;color:white;font-size:16px;cursor:pointer}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px}
+.result{background:white;border-radius:14px;padding:16px;border-left:5px solid #777}
+.result.best{border-left-color:#198754}.cost{font-size:28px;font-weight:800}.small{color:#68737d}
+.bar{height:22px;background:#e9ecef;border-radius:12px;overflow:hidden;margin-top:8px}.fill{height:100%;background:#555}
+.best .fill{background:#198754}
+.note{margin-top:18px;padding:14px;background:#fff8df;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>⚡ Zerneri App</h1><p><strong>Confronto Diesel • Benzina • Elettrico</strong></p>
+<p class="sub">Calcola quanto spendi in base ai chilometri, ai consumi e ai prezzi.</p>
+
+<div class="card">
+<label>Km da percorrere</label><input id="km" type="number" value="1000" min="0" step="1">
+</div>
+
+<div class="grid" style="margin-top:16px">
+<div class="card">
+<h2>🛢️ Diesel</h2>
+<label>Consumo (L/100 km)</label><input id="dieselCons" type="number" value="5.0" min="0" step="0.1">
+<label>Prezzo diesel (€/L)</label><input id="dieselPrice" type="number" value="1.75" min="0" step="0.01">
+</div>
+<div class="card">
+<h2>⛽ Benzina</h2>
+<label>Consumo (L/100 km)</label><input id="gasCons" type="number" value="6.5" min="0" step="0.1">
+<label>Prezzo benzina (€/L)</label><input id="gasPrice" type="number" value="1.80" min="0" step="0.01">
+</div>
+<div class="card">
+<h2>⚡ Elettrico</h2>
+<label>Consumo (kWh/100 km)</label><input id="evCons" type="number" value="17" min="0" step="0.1">
+<label>Prezzo energia (€/kWh)</label><input id="evPrice" type="number" value="0.30" min="0" step="0.01">
+</div>
+</div>
+
+<button onclick="calculate()">Calcola confronto</button>
+<div id="summary"></div>
+<div id="results" class="results"></div>
+<div class="note">💡 I valori preimpostati sono esempi. Puoi modificarli con i consumi reali della tua auto e i prezzi che paghi.</div>
+</div>
+
+<script>
+const euro = n => new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(n);
+function val(id){return Number(document.getElementById(id).value)||0}
+function calculate(){
+ const km=val('km');
+ const data=[
+  ['Diesel','🛢️',km/100*val('dieselCons')*val('dieselPrice')],
+  ['Benzina','⛽',km/100*val('gasCons')*val('gasPrice')],
+  ['Elettrico','⚡',km/100*val('evCons')*val('evPrice')]
+ ];
+ const min=Math.min(...data.map(x=>x[2])), max=Math.max(...data.map(x=>x[2]));
+ const best=data.find(x=>x[2]===min);
+ document.getElementById('summary').innerHTML=
+ `<div class="card"><strong>🏆 Più conveniente: ${best[1]} ${best[0]}</strong><br>
+ Per ${km.toLocaleString('it-IT')} km spendi circa <strong>${euro(min)}</strong>,
+ cioè <strong>${euro(min/km)}</strong> per km.</div>`;
+ document.getElementById('results').innerHTML=data.map(x=>{
+   const per100=x[2]/km*100||0, width=max?x[2]/max*100:0;
+   return `<div class="result ${x[2]===min?'best':''}">
+   <h2>${x[1]} ${x[0]}</h2><div class="cost">${euro(x[2])}</div>
+   <div class="small">${euro(per100)} ogni 100 km</div>
+   <div class="bar"><div class="fill" style="width:${width}%"></div></div>
+   </div>`;
+ }).join('');
+}
+calculate();
+</script>
+</body>
+</html>
